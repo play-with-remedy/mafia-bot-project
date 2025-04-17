@@ -24,35 +24,31 @@ public class MafiaBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(@NotNull Update update) {
-        // Если это callback-запрос (нажатие на кнопку)
         if (update.hasCallbackQuery()) {
             String callbackData = update.getCallbackQuery().getData();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
             handleCallbackQuery(chatId, callbackData);
         }
 
-        // Если это обычное сообщение
         if (update.getMessage() != null && update.getMessage().hasText()) {
             String text = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            log.info("Received message: {}", text);  // Логируем полученное сообщение
+            log.info("Received message: {}", text);
 
             if (text.equals("/start")) {
-                sendInlineKeyboard(chatId); // Отправка inline-клавиатуры с кнопками
+                sendInlineKeyboard(chatId);
             }
         }
     }
 
     private void sendInlineKeyboard(long chatId) {
-        // Создаем inline кнопки
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = getButtonLists();
         inlineKeyboardMarkup.setKeyboard(rows);
 
-        // Отправляем сообщение с inline кнопками
         SendMessage message = new SendMessage(Long.toString(chatId), "Выберите необходимый раздел:");
-        message.setReplyMarkup(inlineKeyboardMarkup);  // Устанавливаем клавиатуру
+        message.setReplyMarkup(inlineKeyboardMarkup);
 
         try {
             execute(message);
@@ -63,7 +59,6 @@ public class MafiaBot extends TelegramLongPollingBot {
     }
 
     private static @NotNull @Unmodifiable List<List<InlineKeyboardButton>> getButtonLists() {
-        // Кнопки с эмодзи и расширенным текстом
         InlineKeyboardButton foulButton = new InlineKeyboardButton("Фол ⚖️");
         foulButton.setCallbackData("foul");
 
@@ -82,7 +77,6 @@ public class MafiaBot extends TelegramLongPollingBot {
         InlineKeyboardButton specSituationButton = new InlineKeyboardButton("Особые ситуации ⚠️");
         specSituationButton.setCallbackData("specSituation");
 
-        // Возвращаем список кнопок, распределенных по строкам
         return List.of(
                 List.of(foulButton, yellowCartButton),
                 List.of(redsCartButton, disqualifyingButton),
@@ -91,7 +85,6 @@ public class MafiaBot extends TelegramLongPollingBot {
     }
 
     private void handleCallbackQuery(long chatId, @NotNull String callbackData) {
-        // Обрабатываем callbackData, чтобы узнать, какую кнопку нажал пользователь
         String response = switch (callbackData) {
             case "foul" -> rules.get("foul");
             case "yellow" -> rules.get("yellow");
@@ -107,12 +100,11 @@ public class MafiaBot extends TelegramLongPollingBot {
     }
 
     private void sendMessage(long chatId, String text) {
-        // Отправляем текстовое сообщение пользователю
         SendMessage message = new SendMessage(Long.toString(chatId), text);
         message.enableMarkdown(true);
 
         try {
-            execute(message); // Отправляем сообщение
+            execute(message);
             log.info("Message sent to chatId: {}", chatId);
         } catch (Exception e) {
             log.error("Error sending message: ", e);
