@@ -92,15 +92,30 @@ public class MafiaBot extends TelegramLongPollingBot {
 
     private void handleCallbackQuery(long chatId, @NotNull String callbackData) {
         // Обрабатываем callbackData, чтобы узнать, какую кнопку нажал пользователь
-        String response = switch (callbackData) {
-            case "foul" -> rules.get("foul");
-            case "yellow" -> rules.get("yellow");
-            case "red" -> rules.get("red");
-            case "disqualifying" -> rules.get("disqualifying");
-            case "teamLoss" -> rules.get("teamLoss");
-            case "specSituation" -> rules.get("specSituation");
-            default -> "Неизвестная команда.";
-        };
+        String response;
+        switch (callbackData) {
+            case "foul":
+                response = rules.get("foul");
+                break;
+            case "yellow":
+                response = rules.get("yellow");
+                break;
+            case "red":
+                response = rules.get("red");
+                break;
+            case "disqualifying":
+                response = rules.get("disqualifying");
+                break;
+            case "teamLoss":
+                response = rules.get("teamLoss");
+                break;
+            case "specSituation":
+                response = rules.get("specSituation");
+                break;
+            default:
+                response = "Неизвестная команда.";
+                break;
+        }
 
         sendMessage(chatId, response);
         sendInlineKeyboard(chatId);
