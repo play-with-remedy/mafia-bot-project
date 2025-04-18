@@ -5,16 +5,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.bots.TelegramWebhookBot;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class MafiaBot extends TelegramLongPollingBot {
+public class MafiaBot extends TelegramWebhookBot  {
 
     private final Map<String, String> rules;
 
@@ -23,13 +27,15 @@ public class MafiaBot extends TelegramLongPollingBot {
     }
 
     @Override
-    public void onUpdateReceived(@NotNull Update update) {
+    public BotApiMethod<?> onWebhookUpdateReceived(@NotNull Update update) {
+        // Проверяем наличие callback-запроса
         if (update.hasCallbackQuery()) {
             String callbackData = update.getCallbackQuery().getData();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
-            handleCallbackQuery(chatId, callbackData);
+            return handleCallbackQuery(chatId, callbackData);
         }
 
+        // Проверяем, если это текстовое сообщение
         if (update.getMessage() != null && update.getMessage().hasText()) {
             String text = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
@@ -37,12 +43,14 @@ public class MafiaBot extends TelegramLongPollingBot {
             log.info("Received message: {}", text);
 
             if (text.equals("/start")) {
-                sendInlineKeyboard(chatId);
+                return sendInlineKeyboard(chatId); // Отправка клавиатуры
             }
         }
+
+        return null; // В случае, если запрос не требует ответа
     }
 
-    private void sendInlineKeyboard(long chatId) {
+    private @NotNull SendMessage sendInlineKeyboard(long chatId) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = getButtonLists();
         inlineKeyboardMarkup.setKeyboard(rows);
@@ -56,6 +64,8 @@ public class MafiaBot extends TelegramLongPollingBot {
         } catch (Exception e) {
             log.error("Error sending message with inline keyboard: ", e);
         }
+
+        return message; // Возвращаем SendMessage, который Telegram должен отправить
     }
 
     private static @NotNull @Unmodifiable List<List<InlineKeyboardButton>> getButtonLists() {
@@ -84,7 +94,7 @@ public class MafiaBot extends TelegramLongPollingBot {
         );
     }
 
-    private void handleCallbackQuery(long chatId, @NotNull String callbackData) {
+    private @NotNull SendMessage handleCallbackQuery(long chatId, @NotNull String callbackData) {
         String response = switch (callbackData) {
             case "foul" -> rules.get("foul");
             case "yellow" -> rules.get("yellow");
@@ -95,11 +105,10 @@ public class MafiaBot extends TelegramLongPollingBot {
             default -> "Неизвестная команда.";
         };
 
-        sendMessage(chatId, response);
-        sendInlineKeyboard(chatId);
+        return sendMessage(chatId, response); // Возвращаем сообщение для отправки
     }
 
-    private void sendMessage(long chatId, String text) {
+    private @NotNull SendMessage sendMessage(long chatId, String text) {
         SendMessage message = new SendMessage(Long.toString(chatId), text);
         message.enableMarkdown(true);
 
@@ -109,6 +118,8 @@ public class MafiaBot extends TelegramLongPollingBot {
         } catch (Exception e) {
             log.error("Error sending message: ", e);
         }
+
+        return message; // Возвращаем SendMessage для отправки через Telegram API
     }
 
     @Override
@@ -119,5 +130,22 @@ public class MafiaBot extends TelegramLongPollingBot {
     @Override
     public String getBotToken() {
         return "7673511304:AAEcROKIfhRcZDFb6wAyoii-i0rwer5gbMk";
+    }
+
+    @Override
+    public String getBotPath() {
+        return "/bmf-rules"; // Указываем путь для Webhook
+    }
+
+    public void setWebhook() {
+        String webhookUrl = "https://fierce-oasis-69058-93ed7aa5961d.herokuapp.com" + getBotPath();
+        SetWebhook setWebhook = new SetWebhook();
+        setWebhook.setUrl(webhookUrl);
+
+        try {
+            execute(setWebhook);  // Устанавливаем webhook
+        } catch (TelegramApiException e) {
+            log.error("Error setting webhook: ", e);
+        }
     }
 }
