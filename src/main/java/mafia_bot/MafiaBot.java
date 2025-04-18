@@ -1,10 +1,7 @@
 package mafia_bot;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
-import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -17,7 +14,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 public class MafiaBot extends TelegramWebhookBot  {
 
     private final Map<String, String> rules;
@@ -40,7 +36,7 @@ public class MafiaBot extends TelegramWebhookBot  {
             String text = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            log.info("Received message: {}", text);
+            System.out.println("Received message: " + text);
 
             if (text.equals("/start")) {
                 return sendInlineKeyboard(chatId); // Отправка клавиатуры
@@ -60,9 +56,9 @@ public class MafiaBot extends TelegramWebhookBot  {
 
         try {
             execute(message);
-            log.info("Sent inline keyboard to chatId: {}", chatId);
+            System.out.println("Sent inline keyboard to chatId: {}" + chatId);
         } catch (Exception e) {
-            log.error("Error sending message with inline keyboard: ", e);
+            System.out.println("Error sending message with inline keyboard: " + e);
         }
 
         return message; // Возвращаем SendMessage, который Telegram должен отправить
@@ -114,9 +110,9 @@ public class MafiaBot extends TelegramWebhookBot  {
 
         try {
             execute(message);
-            log.info("Message sent to chatId: {}", chatId);
+            System.out.println("Message sent to chatId: {}" + chatId);
         } catch (Exception e) {
-            log.error("Error sending message: ", e);
+            System.out.println("Error sending message: " + e);
         }
 
         return message; // Возвращаем SendMessage для отправки через Telegram API
@@ -145,7 +141,7 @@ public class MafiaBot extends TelegramWebhookBot  {
         try {
             execute(setWebhook);  // Устанавливаем webhook
         } catch (TelegramApiException e) {
-            log.error("Error setting webhook: ", e);
+            System.out.println("Error setting webhook: " + e);
         }
     }
 }
