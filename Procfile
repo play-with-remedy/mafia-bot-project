@@ -1,1 +1,0 @@
-web: java -jar target/bmf-bot-1.0-SNAPSHOT.jar

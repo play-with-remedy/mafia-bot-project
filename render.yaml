@@ -1,0 +1,8 @@
+services:
+  - type: worker
+    name: bmf-bot
+    env: java
+    plan: free
+    buildCommand: ./mvnw clean install
+    startCommand: java -jar target/bmf-bot-1.0-SNAPSHOT.jar
+    runtime: java
